@@ -1,17 +1,92 @@
 //a
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
 
-typedef struct {
-    char name[10]; 
-    char from[10]; 
-    char to[10];   
-    char shape[100]; 
-} Edge;
+using namespace std;
 
+struct Lane {
+    string id;
+    int index;
+    string allow;
+    string disallow;
+    float speed;
+    float length;
+    string shape;
+};
 
-void printEdge(const Edge *edge) {
-    printf("%s\t%s\t%s\t%s\n", edge->name, edge->from, edge->to, edge->shape);
+struct Edge {
+    string id;
+    string from;
+    string to;
+    vector<Lane> lanes;
+};
+
+void printEdge(const Edge& edge) {
+    cout << edge.id << "   " << edge.from << "   " << edge.to << "   ";
+    for (const Lane& lane : edge.lanes) {
+        if (lane.disallow == "pedestrian") {
+            cout << lane.shape << " ";
+        }
+    }
+    cout << endl;
 }
 
+int main() {
+    string filename = "input.net.xml"; 
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Không th? m? file!" << endl;
+        return 1;
+    }
+
+    vector<Edge> edges;
+    Edge currentEdge;
+    string line;
+    while (getline(file, line)) {
+        if (line.find("<edge id=") != string::npos) {
+            currentEdge.id = line.substr(line.find("\"") + 1, line.find_last_of("\"") - line.find("\"") - 1);
+            size_t fromPos = line.find("from=\"") + 6;
+            currentEdge.from = line.substr(fromPos, line.find("\"", fromPos) - fromPos);
+            size_t toPos = line.find("to=\"") + 4;
+            currentEdge.to = line.substr(toPos, line.find("\"", toPos) - toPos);
+        } else if (line.find("<lane id=") != string::npos) {
+            Lane lane;
+            lane.id = line.substr(line.find("\"") + 1, line.find_last_of("\"") - line.find("\"") - 1);
+            size_t indexPos = line.find("index=\"") + 7;
+            lane.index = stoi(line.substr(indexPos, line.find("\"", indexPos) - indexPos));
+            size_t allowPos = line.find("allow=\"");
+            if (allowPos != string::npos) {
+                size_t endPos = line.find("\"", allowPos + 7);
+                lane.allow = line.substr(allowPos + 7, endPos - allowPos - 7);
+            }
+            size_t disallowPos = line.find("disallow=\"");
+            if (disallowPos != string::npos) {
+                size_t endPos = line.find("\"", disallowPos + 10);
+                lane.disallow = line.substr(disallowPos + 10, endPos - disallowPos - 10);
+            }
+            size_t speedPos = line.find("speed=\"") + 7;
+            lane.speed = stof(line.substr(speedPos, line.find("\"", speedPos) - speedPos));
+            size_t lengthPos = line.find("length=\"") + 8;
+            lane.length = stof(line.substr(lengthPos, line.find("\"", lengthPos) - lengthPos));
+            size_t shapePos = line.find("shape=\"") + 7;
+            lane.shape = line.substr(shapePos, line.find("\"", shapePos) - shapePos);
+            currentEdge.lanes.push_back(lane);
+        } else if (line.find("</edge>") != string::npos) {
+            edges.push_back(currentEdge);
+            currentEdge = Edge(); // Reset currentEdge
+        }
+    }
+
+    
+    for (const Edge& edge : edges) {
+        printEdge(edge);
+    }
+
+    file.close();
+    return 0;
+}
 
 //b
 void readNetXML(const string& filename, vector<Edge>& edges) {
@@ -243,7 +318,7 @@ bool containsKeyword(const std::string& line, const std::string& keyword) {
 void printEnd(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
-        std::cerr << "Kh�ng th? m? file." << std::endl;
+        std::cerr << "Không th? m? file." << std::endl;
         return;
     }
 
