@@ -154,67 +154,94 @@ std::vector<std::pair<Shape*, Shape*>> findNeighbors(const std::map<std::string,
 
     return neighbors;
 }
-
 //b
-std::set<Point*> P;
-std::set<Shape*> S;
-std::vector<std::vector<TimeExpandedNode*>> allTENs;
-std::vector<TimeExpandedNode*> tempTENs;
-allTENs.push_back(tempTENs);
+struct Point {
+    double x;
+    double y;
+};
 
-while(!Eof(file)){
-    line = readLine(file);
-    nameOfShape = getName(line);
-    index = getIndex(line);
-    firstPoint = getFirstPoint(line);
-    lastPoint = getLastPoint(line);
-    shape = getShape(firstPoint, lastPoint, line);
+struct Shape {
+    Point start;
+    Point end;
+    std::string name;
+};
 
-    if(firstPoint not in P){
-        P.insert(firstPoint);
-        n1 = getTENode(firstPoint);
-        allTENs.at(0).push_back(n1);
-    } 
-    if(lastPoint not in P){
-        P.insert(lastPoint);
-        n2 = getTENode(lastPoint);
-        allTENs.at(0).push_back(n2);
+struct TimeExpandedNode {
+    std::vector<std::pair<TimeExpandedNode*, Shape*>> srcs;
+    std::vector<std::pair<TimeExpandedNode*, Shape*>> tgts;
+    Point origin;
+    int time;
+};
+
+// Hàm đọc file AllParts.txt và xây dựng danh sách các TE-Node ở tầng số 0
+std::vector<TimeExpandedNode*> buildInitialTENodes(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        // Xử lý lỗi mở file
     }
-    if(shape not in S){
-        S.insert(shape);
+
+    std::set<Point> P;
+    std::set<Shape> S;
+    std::vector<TimeExpandedNode*> allTENs;
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::string nameOfShape = getName(line);
+        int index = getIndex(line);
+        Point firstPoint = getFirstPoint(line);
+        Point lastPoint = getLastPoint(line);
+        Shape shape = getShape(firstPoint, lastPoint, line);
+
+        if (!P.count(firstPoint)) {
+            P.insert(firstPoint);
+            TimeExpandedNode* n1 = getTENode(firstPoint);
+            allTENs.push_back(n1);
+        }
+
+        if (!P.count(lastPoint)) {
+            P.insert(lastPoint);
+            TimeExpandedNode* n2 = getTENode(lastPoint);
+            allTENs.push_back(n2);
+        }
+
+        if (!S.count(shape)) {
+            S.insert(shape);
+        }
     }
+
+    for (auto n : allTENs) {
+        for (auto s : S) {
+            if (s.start == n->origin) {
+                n->srcs.push_back(std::make_pair(nullptr, &s));
+            } else if (s.end == n->origin) {
+                n->tgts.push_back(std::make_pair(nullptr, &s));
+            }
+        }
+    }
+
+    for (auto nA : allTENs) {
+        for (auto nB : allTENs) {
+            if (nA != nB) {
+                std::vector<std::pair<int, int>> nA_to_nB;
+                std::vector<std::pair<int, int>> nB_to_nA;
+                nB_to_nA = getCoincidences(&(nA->srcs), &(nB->tgts));
+                nA_to_nB = getCoincidences(&(nB->srcs), &(nA->tgts));
+                nA->srcs.push_back(std::make_pair(nB, nullptr));
+                nA->tgts.push_back(std::make_pair(nB, nullptr));
+            }
+        }
+    }
+
+    return allTENs;
 }
 
-for(TimeExpandedNode* n : allTENs.at(0)){
-    for(Shape* s : S){
-        if(s->start->equals(n->origin)){
-            n->insertTarget(s);
-        }
-        else if(s->end->equals(n->origin)){
-            n->insertSource(s);
-        }
-    }
-}
-
-for(TimeExpandedNode* nA : allTENs.at(0)){
-    for(TimeExpandedNode* nB : allTENs.at(0)){
-        std::vector<std::pair<int, int>> nA_to_nB;
-        std::vector<std::pair<int, int>> nB_to_nA;
-        if(!nA->equals(nB)){
-            nB_to_nA = getCoincidence(nA->srcs, nB->tgts);
-            nA_to_nB = getCoincidence(nB->srcs, nA->tgts);
-            nA->insertSourcesAndTargets(nB, nB_to_nA, nA_to_nB);
-        }
-    }
-}
-
-std::vector<std::pair<int, int>> getCoincidence(std::vector<std::pair<TimeExpandedNode*, Shape*>>* srcs,
-                                                 std::vector<std::pair<TimeExpandedNode*, Shape*>>* tgts)
-{
+// Hàm kiểm tra xem có sự trùng khớp giữa các srcs và tgts không
+std::vector<std::pair<int, int>> getCoincidences(std::vector<std::pair<TimeExpandedNode*, Shape*>>* srcs,
+                                                 std::vector<std::pair<TimeExpandedNode*, Shape*>>* tgts) {
     std::vector<std::pair<int, int>> result;
-    for(int i = 0; i < srcs->size(); i++){
-        for(int j = 0; j < tgts->size(); j++){
-            if(srcs->at(i).second->equals(tgts->at(j).second)){
+    for (int i = 0; i < srcs->size(); i++) {
+        for (int j = 0; j < tgts->size(); j++) {
+            if (srcs->at(i).second == tgts->at(j).second) {
                 result.push_back(std::make_pair(i, j));
             }
         }
