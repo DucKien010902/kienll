@@ -174,7 +174,7 @@ struct TimeExpandedNode {
 };
 
 // Hàm đọc file AllParts.txt và xây dựng danh sách các TE-Node ở tầng số 0
-std::vector<TimeExpandedNode*> buildInitialTENodes(const std::string& filename) {
+std::vector<TimeExpandedNode*> readAllparts(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
         // Xử lý lỗi mở file
