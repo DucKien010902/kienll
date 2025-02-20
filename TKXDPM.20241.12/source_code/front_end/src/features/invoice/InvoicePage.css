@@ -1,0 +1,46 @@
+@media print {
+  /* Ẩn tất cả các elements khác */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Ẩn modal overlay */
+  .MuiModal-backdrop {
+    display: none !important;
+  }
+
+  /* Chỉ hiện nội dung cần in */
+  #printable-invoice,
+  #printable-invoice * {
+    visibility: visible;
+  }
+
+  /* Định dạng trang in */
+  #printable-invoice {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm; /* Khổ A4 */
+    min-height: 297mm;
+    padding: 20mm;
+    margin: 0;
+    background: white;
+  }
+
+  /* Ẩn nút in khi in */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Đảm bảo background và màu sắc được in */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* CSS cho modal content */
+#printable-invoice {
+  background: white;
+  position: relative;
+}
