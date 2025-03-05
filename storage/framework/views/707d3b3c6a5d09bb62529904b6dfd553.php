@@ -1,0 +1,1 @@
+ <?php /**PATH C:\xampp\htdocs\web_qlphongtrobk\resources\views/frontend/components/modal.blade.php ENDPATH**/ ?>

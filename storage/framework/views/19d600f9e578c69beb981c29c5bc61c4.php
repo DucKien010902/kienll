@@ -1,0 +1,1 @@
+ <?php /**PATH D:\Lập Trình Web PHP NC\Project_Laravel\Web_QL_PhongTro_L10\resources\views/frontend/components/modal.blade.php ENDPATH**/ ?>

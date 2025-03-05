@@ -1,0 +1,1 @@
+ <?php /**PATH E:\laragon\www\phongtro20\resources\views/frontend/components/modal.blade.php ENDPATH**/ ?>
